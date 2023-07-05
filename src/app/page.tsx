@@ -42,6 +42,36 @@ export default function Home() {
       </div>
 
       <div>
+        <form>
+          <div style={{ display: "flex", flexWrap: "wrap" }}>
+            <label
+              htmlFor="envIDInput"
+              style={{ flexShrink: "10", paddingRight: ".25rem" }}>
+              environment id:
+            </label>
+            <input
+              id="envIDInput"
+              type="text"
+              style={{ flexGrow: "10", paddingRight: "1rem" }}
+            />
+            <label
+              htmlFor="clientIDInput"
+              style={{
+                flexShrink: "10",
+                paddingLeft: "1rem",
+                paddingRight: ".25rem",
+              }}>
+              client id:
+            </label>
+            <input
+              id="clientIDInput"
+              type="text"
+              style={{
+                flexGrow: "10",
+              }}
+            />
+          </div>
+        </form>
         <a
           href="https://apidocs.pingidentity.com/pingone/main/v1/api/#getting-started-with-the-pingone-apis"
           target="_blank"
