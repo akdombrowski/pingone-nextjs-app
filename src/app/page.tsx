@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import styles from "./page.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 // North America PingOne Auth API
 const authAPI = "https://auth.pingone.com/";
 const authorizeEndpoint = "/as/authorize";
 const tokenEndpoint = "/as/token";
+const userInfoEndpoint = "/as/userinfo";
 
 const envID = "333d66b5-d2f0-48d0-8ec0-cf4cafd35d25";
 const clientID = "7cbbc92e-97d7-4f72-97e8-28173f76b8ba";
@@ -28,6 +29,7 @@ type TokenResponse = {
 export const Home = () => {
   const [aT, setAT] = useState("");
   const [idT, setIDT] = useState("");
+  const [userInfo, setUserInfo] = useState("");
 
   const authzURL =
     authAPI +
@@ -107,43 +109,58 @@ export const Home = () => {
       }
     };
 
+    const getUserInfo = async (accessToken: string) => {
+      const getUserInfoURL = authAPI + envID + userInfoEndpoint;
+
+      try {
+        const response = await fetch(getUserInfoURL, {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + accessToken,
+          },
+        });
+
+        if (response.ok) {
+          const resJSON = await response.json();
+          setUserInfo(JSON.stringify(resJSON));
+          return resJSON;
+        } else {
+          setUserInfo("");
+          throw new Error(
+            "response not OK: " + response.status + "\n" + response.text()
+          );
+        }
+      } catch (error) {
+        console.error("fetching userInfo failed");
+        console.error(error);
+        return {};
+      }
+    };
+
     const referred = document.referrer;
 
     const urlStr = document.URL;
     const url = new URL(urlStr);
     const queryParams = url.searchParams;
 
-    if (referred && !queryParams.get("code")) {
-      const url = new URL(referred);
+    if (referred && queryParams.get("code")) {
+      // const url = new URL(referred);
+      const url = new URL(window.location.href);
       const queryParams = url.searchParams;
       const authzCode = queryParams?.get("code");
 
       if (authzCode) {
         try {
-          getTokens(authzCode);
+          const tokenResponse = getTokens(authzCode).then((res) => {
+            if (res?.access_token) {
+              tokenResponse.then(async (val) => {
+                getUserInfo(res.access_token);
+              });
+            }
+          });
         } catch (error) {
+          console.error("Problem getting token(s)");
           console.error(error);
-          throw new Error("Problem getting token(s)", { cause: error });
-        }
-      }
-    }
-  });
-
-  useEffect(() => {
-    const urlStr = document.URL;
-    const url = new URL(urlStr);
-    const queryParams = url.searchParams;
-
-    if (queryParams) {
-      const authzCode = queryParams.get("code");
-
-      if (authzCode) {
-        try {
-          url.search = "";
-          window.location.replace(url);
-        } catch (error) {
-          console.error(error);
-          throw new Error("Problem getting token(s)", { cause: error });
         }
       }
     }
@@ -180,6 +197,29 @@ export const Home = () => {
           height={112}
           priority
         />
+      </div>
+
+      <div
+        style={{
+          height: "10rem",
+          marginTop: "1rem",
+          marginBottom: "2rem",
+          fontSize: ".75rem",
+        }}>
+        {idT ? (
+          <p
+            style={{
+              fontSize: "0.75rem",
+              wordBreak: "break-all",
+              height: "100%",
+              overflow: "auto",
+            }}>
+            userInfo: <br />
+            {userInfo}
+          </p>
+        ) : (
+          <></>
+        )}
       </div>
 
       <div
